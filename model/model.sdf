@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<sdf version='1.9>  simulation description format
+<model name='x500_depth'>
+<include merge ='true'>
+<uri> x500 </uri>
+</include>
+<include merge='true'>
+<uri>model://OakD-Lite</uri>
+<!-- px4 x500 model of drone is being provided to me by the gazebo and i added a camera OakDlite  -->
+<pose>.12 .03 .242 0 0 0</pose>
+</include>
+<joint name ="CameraJoint" type='fixed'>
+
+
+
+

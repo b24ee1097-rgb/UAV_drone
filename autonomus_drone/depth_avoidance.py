@@ -177,3 +177,44 @@ class SmartObstacleNavigator(Node):
         self.bridge = CvBridge() #Important Cvbridge 
         self.timer = self.create_timer(0.1, self.control_loop)
         #logger we use for real time debugging and to see the values of the sensors and the state of the drone
+       
+        self.get_logger().info(f"Navigator v10.0 Ready - x500 Optimized (clearance: {self.MIN_SAFE_CLEARANCE}m)")
+    def get_lookahead_target(self, lookahead_dist=2.50):
+        if self.wp_index >= len(self.waypoints):  #the waypoints here is the global path
+            return None
+        min_clearance = min(self.fused_left, self.fused_right, self.fused_front)
+        if min_clearance < 2.0:#if obstacle is much close then take sharp turns
+            lookahead_dist = 1.5 #Its the planned distance that the controller decided to move in the near future 
+        elif self.current_forward_vel > 7.0:
+            lookahead_dist = 3.5  #if drone is at high speed then we need smooth steering 
+        accumulated_dist = 0.0
+        px, py = self.current_x, self.current_y
+
+        for i in range(self.wp_index, len(self.waypoints)-1):
+            wx ,wy = self.waypoints[i]
+            seg_dist = math.hypot(wx-px, wy-py)  #root((x2-x1)^2 + (y2-y1)^2) gives the distance between the current position and the waypoint
+
+            if accumulated_dist + seg_dist >= lookahead_dist:
+                if seg_dist > 0:
+                    t = (lookahead_dist - accumulated_dist) / seg_dist
+                    return (px + t*(wx-px) ,py+t*(wy-py))
+                return (wx, wy)
+            accumulated_dist += seg_dist #helpsin correct curvature tracking the total distance is not only the st line distance
+            px , py = wx, wy
+        return self.waypoints[-1]
+        #how lookahead helps in depth avoidance is like that we are planning a future horizon(time stamp) distance to avoid collisions
+        #this is a control function we could have simply decided the next waypoint by using the waypoint_index
+        #it creates a virtual goal
+        
+def is_oscillating(self):
+    if len(self.lateral_history)<15:
+        return False
+
+#this tells about the left right error that have been produced
+def is_stuck(self):
+    if len(self.position_history)<20:
+        return False
+    positions = list(self.position_history)
+    recent = positions[-10:]
+    older = positions[-30:-20]
+
